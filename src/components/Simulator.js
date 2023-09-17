@@ -1,41 +1,41 @@
 import { useState } from "react";
-import { JuegoInfo } from "./JuegoInfo";
-import { Modal } from "./Modal";
+import { GameTable } from "./GameTable";
 import ReactPaginate from 'react-paginate';
-// Importa el archivo CSS
 import './pagination.css';
+import React from 'react';
+import { Utilities } from "./Utilities";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import { Constants } from './Constans';
 
-// Tu componente React
-// ...
-
-function Sim({ juegos }) {
-
-    const [simulando, setSimulando] = useState(false);
-    const [finalizado, setFinalizado] = useState(false);
-    const [juegosInfo, setJuegosInfo] = useState([]);
+function Simulator({ juegos }) {
+    const utils = new Utilities();
+    const [simulating, setSimulating] = useState(false);
+    const [ending, setEnding] = useState(false);
+    const [infoGame, setinfoGame] = useState([]);
 
     const [modal, setModal] = useState("");
 
-    const JUG_X_EQUIPO = 5;
-    const MED_RES = 35;
-    const DES_RES = 10;
-    const EXP = 10;
-    const MIN_SUE = 1;
-    const MAX_SUE = 3;
 
-    const NUM_RONDAS = 10;
-
-    const crearEquipo = (prefix) => {
+    const createTeam = (prefix) => {
         let equipo = [];
         let name = 65;
-
-        for (let i = 0; i < JUG_X_EQUIPO; i++) {
+        for (let i = 0; i < Constants.PLAYERS_PER_TEAM; i++) {
             name += i;
             equipo.push({
                 nombre: `${prefix}-${String.fromCharCode(name)}`,
-                genero: selecccionarGenero(),
-                resistencia: Math.trunc(generarNumeroNormal(MED_RES, DES_RES)),
-                experiencia: EXP,
+                genero: utils.selectGender(),
+                resistencia: Math.trunc(utils.generateNormalNumber(Constants.AVERAGE_RESISTANCE, Constants.RESISTANCE_DEVIATION)),
+                experiencia: Constants.EXPERIENCE,
                 sum_exp: 0,
                 penitencia: 5,
                 suerte: 0,
@@ -47,33 +47,17 @@ function Sim({ juegos }) {
         return equipo;
     };
 
-    const [t1, setT1] = useState(crearEquipo("T1"));
-    const [t2, setT2] = useState(crearEquipo("T2"));
+    const [team1] = useState(createTeam("T1"));
+    const [team2] = useState(createTeam("T2"));
 
-    function selecccionarGenero() {
-        let g = ["M", "H"];
-        return g[Math.floor(Math.random() * g.length)];
-    }
-
-    function generarNumeroDecimalEntre(minimo, maximo) {
-        return parseFloat((Math.random() * (maximo - minimo) + minimo).toFixed(2));
-    }
-
-    function generarNumeroNormal(media, desviacionEstandar) {
-        var u = 1 - Math.random();
-        var v = 1 - Math.random();
-        var z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-        return Math.abs(media + z * desviacionEstandar);
-    }
-
-    //--- CEN- INT - EX- ERR
-    const MUJ_DIANAS = [0.3, 0.58, 0.85, 1];
-    const HOM_DIANAS = [0.2, 0.53, 0.93, 1];
-    const VALORES_DIANAS = [10, 9, 8, 0];
-
-    const generarSuerte = async (equipo) => {
+    //Generar Suerte
+    // Paso 1: Asignar valores de suerte aleatorios a cada jugador del equipo
+    // Paso 2: Encontrar al jugador con la suerte máxima
+    // Paso 3: Actualizar las elecciones de cada jugador en el equipo
+    // Paso 4: Devolver el índice del jugador con la suerte máxima
+    const generateLuck = async (equipo) => {
         for (let i = 0; i < equipo.length; i++) {
-            equipo[i].suerte = await generarNumeroDecimalEntre(MIN_SUE, MAX_SUE);
+            equipo[i].suerte = await utils.generateDecimalBetween(Constants.MINIMAL_LUCK, Constants.MAXIMAL_LUCK);
         }
         let index = 0;
         let max = 0;
@@ -94,20 +78,20 @@ function Sim({ juegos }) {
         return index;
     }
 
-    const lanzarXveces = (equipo, lanzador) => {
+    const throwTimes = (equipo, lanzador) => {
         let resAnterior = equipo[lanzador].resistencia;
         let puntos = 0;
         while (equipo[lanzador].resistencia >= equipo[lanzador].penitencia) {
-            puntos += lanzar(equipo[lanzador].genero);
+            puntos += launch(equipo[lanzador].genero);
             equipo[lanzador].resistencia -= equipo[lanzador].penitencia
         }
-        equipo[lanzador].resistencia = resAnterior - Math.trunc(generarNumeroDecimalEntre(1, 2));
+        equipo[lanzador].resistencia = resAnterior - Math.trunc(utils.generateDecimalBetween(1, 2));
         return puntos;
     }
 
-    const lanzar = (genero) => {
+    const launch = (genero) => {
         let l = Math.random();
-        const dianas = (genero === "M") ? MUJ_DIANAS : HOM_DIANAS;
+        const dianas = (genero === "M") ? Constants.TARGET_WOMEN : Constants.TARGET_MEN;
         let tiro = 0;
         for (let i = 0; i < dianas.length; i++) {
             if (l <= dianas[i]) {
@@ -115,16 +99,16 @@ function Sim({ juegos }) {
                 break;
             }
         }
-        return VALORES_DIANAS[tiro];
+        return Constants.TARGET_VALUES[tiro];
     }
 
-    const validarPuntos = (puntos1, puntos2, temp1, temp2, l1, l2) => {
+    const validatePoints = (puntos1, puntos2, temp1, temp2, l1, l2) => {
         if (puntos1 === puntos2) {
             let a = puntos1;
             let b = puntos2;
             while (a === b) {
-                a = lanzar(temp1[l1].genero)
-                b = lanzar(temp2[l2].genero)
+                a = launch(temp1[l1].genero)
+                b = launch(temp2[l2].genero)
                 if (a > b) {
                     temp1[l1].experiencia += 3;
                     temp1[l1].sum_exp += 3;
@@ -153,7 +137,7 @@ function Sim({ juegos }) {
         }
     }
 
-    const maxExpJuego = (temp1, temp2) => {
+    const maxExperienceGame = (temp1, temp2) => {
         let me1 = temp1.sort((j1, j2) => j2.sum_exp - j1.sum_exp)[0];
         let me2 = temp2.sort((j1, j2) => j2.sum_exp - j1.sum_exp)[0];
         if (me1 > me2) {
@@ -169,27 +153,27 @@ function Sim({ juegos }) {
         }
     }
 
-    const puntosXJuegoJugador = (temp1, temp2) => {
+    const pointsXGamePlayer = (temp1, temp2) => {
         let pje1 = temp1.map(j => { return { jugador: j.nombre, genero: j.genero, puntos: j.puntos, rondas: j.rondasGanadas } })
         let pje2 = temp2.map(j => { return { jugador: j.nombre, genero: j.genero, puntos: j.puntos, rondas: j.rondasGanadas } })
         return { pje1, pje2 };
     }
 
-    const comenzar = async () => {
-        setSimulando(true);
+    const start = async () => {
+        setSimulating(true);
         let tempJI = [];
         for (let i = 0; i < juegos; i++) {
-            let temp1 = t1.map(x => x);
-            let temp2 = t2.map(x => x);
+            let temp1 = team1.map(x => x);
+            let temp2 = team2.map(x => x);
             let puntosE1 = 0;
             let puntosE2 = 0;
             let msInfo = {
                 jugador: "",
                 suerte: 0,
             }
-            for (let j = 0; j < NUM_RONDAS; j++) {
-                let l1 = await generarSuerte(temp1);
-                let l2 = await generarSuerte(temp2);
+            for (let j = 0; j < Constants.NUMBER_OF_ROUNDS; j++) {
+                let l1 = await generateLuck(temp1);
+                let l2 = await generateLuck(temp2);
                 if (temp1[l1].suerte > msInfo.suerte) {
                     msInfo.jugador = temp1[l1].nombre;
                     msInfo.suerte = temp1[l1].suerte;
@@ -198,15 +182,15 @@ function Sim({ juegos }) {
                     msInfo.jugador = temp2[l2].nombre;
                     msInfo.suerte = temp2[l2].suerte;
                 }
-                let puntos1 = await lanzarXveces(temp1, l1);
-                let puntos2 = await lanzarXveces(temp2, l2);
-                await validarPuntos(puntos1, puntos2, temp1, temp2, l1, l2);
+                let puntos1 = await throwTimes(temp1, l1);
+                let puntos2 = await throwTimes(temp2, l2);
+                await validatePoints(puntos1, puntos2, temp1, temp2, l1, l2);
                 if (temp1[l1].elecciones === 3) {
-                    puntos1 += lanzar(temp1[l1].genero);
+                    puntos1 += launch(temp1[l1].genero);
                     temp1[l1].elecciones = 0;
                 }
                 if (temp2[l2].elecciones === 3) {
-                    puntos2 += lanzar(temp2[l2].genero);
+                    puntos2 += launch(temp2[l2].genero);
                     temp2[l2].elecciones = 0;
                 }
                 temp1[l1].puntos = puntos1;
@@ -219,10 +203,10 @@ function Sim({ juegos }) {
 
             await tempJI.push({
                 max_suerte: msInfo,
-                max_exp: maxExpJuego(temp1, temp2),
+                max_exp: maxExperienceGame(temp1, temp2),
                 eq1_puntos: puntosE1,
                 eq2_puntos: puntosE2,
-                info_puntos: puntosXJuegoJugador(temp1, temp2)
+                info_puntos: pointsXGamePlayer(temp1, temp2)
             });
             puntosE1 = 0;
             puntosE2 = 0;
@@ -231,18 +215,18 @@ function Sim({ juegos }) {
                 suerte: 0,
             }
         }
-        setFinalizado(true)
-        setJuegosInfo(tempJI);
+        setEnding(true)
+        setinfoGame(tempJI);
     }
 
-    const cerrarModal = () => {
+    const closeModal = () => {
         setModal("");
     }
 
-    const puntosJugadorXJuego = (nombre) => {
+    const pointsPlayerXGame = (nombre) => {
         let temp = [];
-        for (let i = 0; i < juegosInfo.length; i++) {
-            const juego = juegosInfo[i];
+        for (let i = 0; i < infoGame.length; i++) {
+            const juego = infoGame[i];
             let puntos = 0;
             let temp1 = juego.info_puntos.pje1.filter(e => e.jugador === nombre);
             for (let i = 0; i < temp1.length; i++) {
@@ -256,7 +240,7 @@ function Sim({ juegos }) {
         }
         return temp;
     }
-    const itemsPerPage = 5; // Cambia el número de elementos por página según tus necesidades
+    const itemsPerPage = 5;
     const [currentPage, setCurrentPage] = useState(0);
 
     const handlePageChange = ({ selected }) => {
@@ -265,47 +249,39 @@ function Sim({ juegos }) {
 
     const startIndex = currentPage * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const displayedJuegos = juegosInfo.slice(startIndex, endIndex);
+    const displayedJuegos = infoGame.slice(startIndex, endIndex);
     return (
         <div className="mt-4">
-            {!simulando && <div className="text-center">
+            {!simulating && <div className="text-center">
                 <h3>Número de juegos: {juegos}</h3><br />
-                <button className="btn btn-success btn-lg" onClick={comenzar}>Iniciar</button>
+                <button className="btn btn-success btn-lg" onClick={start}>Iniciar</button>
 
             </div>}
-            {!!finalizado && <div className="row">
+            {!!ending && <div className="row">
                 <div className="col card mx-1">
-                    <h5 className="text-center card-header">Equipo 1:</h5>
-                    <div className="card-body">
-                        {t1.map(j => (<p key={`E1-${j.nombre}`} className="d-flex justify-content-between"> <label> {j.nombre} | {(j.genero === "H") ? "Hombre" : "Mujer"}</label> <button className="btn btn-info btn-sm" onClick={e => setModal(j.nombre)}>Detalles</button></p>))}
+                    <h5 className="text-center">Equipo 1:</h5>
+                    <div >
+                        {team1.map(j => (<p key={`E1-${j.nombre}`} className="d-flex justify-content-between"> <label> {j.nombre} | {(j.genero === "H") ? "Hombre" : "Mujer"}</label> <button className="btn btn-success btn-sm" onClick={e => setModal(j.nombre)}>Ver Grafico</button></p>))}
                     </div>
                 </div>
                 <div className="col card mx-1">
-                    <h5 className="text-center card-header">Equipo 2:</h5>
-                    <div className="card-body">
-                        {t2.map(j => (<p key={`E2-${j.nombre}`} className="d-flex justify-content-between"> <label> {j.nombre} | {(j.genero === "H") ? "Hombre" : "Mujer"}</label> <button className="btn btn-info btn-sm" onClick={e => setModal(j.nombre)}>Detalles</button></p>))}
+                    <h5 className="text-center ">Equipo 2:</h5>
+                    <div >
+                        {team2.map(j => (<p key={`E2-${j.nombre}`} className="d-flex justify-content-between"> <label> {j.nombre} | {(j.genero === "H") ? "Hombre" : "Mujer"}</label> <button className="btn btn-success btn-sm" onClick={e => setModal(j.nombre)}>Ver Grafico</button></p>))}
                     </div>
                 </div>
             </div>}
             {
-                !!finalizado && <div className="containerborder rounded" >
+                !!ending && <div className=" rounded" >
                     <table className="table">
                         <tbody>
                             {displayedJuegos.map((j, i) => (
-                                <JuegoInfo key={`jueinfo-${i}`} info={j} index={((i + 1) - 5) + ((currentPage + 1) * 5)} />
+                                <GameTable key={`jueinfo-${i}`} info={j} index={((i + 1) - 5) + ((currentPage + 1) * 5)} />
                             ))}
                         </tbody>
-                        <thead>
-                            <tr>
-                                <th className="font-weight-bold ">
-                                    <td colspan="4">|------------Juego------|---Jugador más Suerte---|-
-                                        Más experiencia ganada-|-Rondas ganadas por género--|</td></th>
-                            </tr>
-                        </thead>
                     </table>
-
                     <ReactPaginate
-                        pageCount={Math.ceil(juegosInfo.length / itemsPerPage)}
+                        pageCount={Math.ceil(infoGame.length / itemsPerPage)}
                         pageRangeDisplayed={3}
                         marginPagesDisplayed={1}
                         onPageChange={handlePageChange}
@@ -323,9 +299,70 @@ function Sim({ juegos }) {
                     />
                 </div>
             }
-            {(modal !== "") && <Modal jugador={modal} getInfo={puntosJugadorXJuego} cerrar={cerrarModal} />}
+            {(modal !== "") && <Modal jugador={modal} getInfo={pointsPlayerXGame} cerrar={closeModal} />}
         </div>
     );
 }
 
-export { Sim };
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
+
+function Modal({ jugador, getInfo, cerrar }) {
+
+    const options = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: `Puntos/Juego ${jugador}`,
+            },
+        },
+    };
+
+    const info = getInfo(jugador);
+    console.log(info)
+    const labels = info.map(e => e.juego);
+
+    const puntos = info.map(e => e.puntos);
+
+    const data = {
+        labels,
+        datasets: [
+            {
+                label: `Puntos/Juego ${jugador}`,
+                data: puntos,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            }
+        ],
+    };
+
+    return (<div style={
+        { width: '100vw', padding: "10px", height: "100vh", zIndex: 3, position: 'fixed', backgroundColor: 'rgba(0,0,0,0.4)', left: 0, top: 0 }}>
+
+        <div className='card' style={{ maxWidth: "70vw", margin: "auto" }}>
+            <div className='card-header my-2 px-4'>
+                <div className='row d-flex justify-content-center'>
+                    <h3 className='col'>Puntos por juego de: {jugador}</h3>
+                    <button className='col btn btn-outline-danger btn-sm' style={{ maxWidth: "30px" }} onClick={cerrar}>x</button>
+                </div>
+            </div>
+            <div className='card-body' >
+                <Line options={options} data={data} style={{ maxWidth: "100%", height: "auto" }} />;
+            </div>
+        </div>
+    </div>);
+}
+
+
+export { Simulator };

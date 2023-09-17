@@ -50,9 +50,3 @@ thead td {
     font-size: 12px;
     /* Ajusta el tamaño de la fuente según tus preferencias */
 }
-
-/* Estilos para las rejillas */
-thead tr:nth-child(odd) {
-    background-color: #f2f2f2;
-    /* Color de fondo para las filas impares */
-}

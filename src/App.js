@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { Form } from "./components/Form";
-import { Sim } from "./components/Sim";
+import { Simulator } from "./components/Simulator";
 
 function App() {
   const [view, setView] = useState("form");
-  const [juegos, setJuegos] = useState(20);
+  const [juegos, setJuegos] = useState(20000);
 
-  const simular = (event) => {
+  const simulate = (event) => {
     if (event) event.preventDefault();
-    setView("sim");
+    setView("Simulator");
   }
 
   return (
@@ -80,15 +79,30 @@ function App() {
           </table>
         </div>
       </div>
-      <div className="row justify-content-center"> {/* Centra los elementos hijos horizontalmente */}
-        <div className="col-md-6">
-          {view === "form" && <Form juegos={juegos} cambiarJuegos={setJuegos} simular={simular} />}
-          {view === "sim" && <Sim juegos={juegos} />}
+      <div className="row justify-content-center">
+        <div className="col-md-12">
+          {view === "form" && <Form juegos={juegos} cambiarJuegos={setJuegos} simular={simulate} />}
+          {view === "Simulator" && <Simulator juegos={juegos} />}
         </div>
       </div>
 
     </div>
 
+  );
+}
+
+function Form({ juegos, cambiarJuegos, simular }) {
+
+  return (
+    <form className="p-3">
+      <div className="mb-3">
+        <label className="form-label">Número de Juegos</label>
+        <input type="number" min={1} value={juegos} onChange={e => cambiarJuegos(e.target.value)} className="form-control" readOnly />
+      </div>
+      <div className="row justify-content-center">
+        <button type="button" disabled={juegos <= 0} className="btn btn-success col-md-6" onClick={e => simular(e)}>Simular</button>
+      </div>
+    </form>
   );
 }
 
