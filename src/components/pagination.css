@@ -1,0 +1,58 @@
+/* Estilos para la paginación */
+.pagination {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.page {
+    margin: 0 5px;
+    padding: 5px 5px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.page-link {
+    text-decoration: none;
+    color: #333;
+}
+
+.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.previous,
+.next {
+    margin: 0 5px;
+    padding: 5px 5px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.previous-link,
+.next-link {
+    text-decoration: none;
+    color: #333;
+}
+
+.break {
+    margin: 0 5px;
+}
+
+/* Estilos para la fuente */
+thead th,
+thead td {
+    font-size: 12px;
+    /* Ajusta el tamaño de la fuente según tus preferencias */
+}
+
+/* Estilos para las rejillas */
+thead tr:nth-child(odd) {
+    background-color: #f2f2f2;
+    /* Color de fondo para las filas impares */
+}

@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { JuegoInfo } from "./JuegoInfo";
 import { Modal } from "./Modal";
+import ReactPaginate from 'react-paginate';
+// Importa el archivo CSS
+import './pagination.css';
+
+// Tu componente React
+// ...
 
 function Sim({ juegos }) {
 
@@ -250,7 +256,16 @@ function Sim({ juegos }) {
         }
         return temp;
     }
+    const itemsPerPage = 5; // Cambia el número de elementos por página según tus necesidades
+    const [currentPage, setCurrentPage] = useState(0);
 
+    const handlePageChange = ({ selected }) => {
+        setCurrentPage(selected);
+    };
+
+    const startIndex = currentPage * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const displayedJuegos = juegosInfo.slice(startIndex, endIndex);
     return (
         <div className="mt-4">
             {!simulando && <div className="text-center">
@@ -273,9 +288,40 @@ function Sim({ juegos }) {
                 </div>
             </div>}
             {
-                !!finalizado && juegosInfo.map((j, i) => (
-                    <JuegoInfo key={`jueinfo-${i}`} info={j} index={i} />
-                ))
+                !!finalizado && <div className="containerborder rounded" >
+                    <table className="table">
+                        <tbody>
+                            {displayedJuegos.map((j, i) => (
+                                <JuegoInfo key={`jueinfo-${i}`} info={j} index={((i + 1) - 5) + ((currentPage + 1) * 5)} />
+                            ))}
+                        </tbody>
+                        <thead>
+                            <tr>
+                                <th className="font-weight-bold ">
+                                    <td colspan="4">|------------Juego------|---Jugador más Suerte---|-
+                                        Más experiencia ganada-|-Rondas ganadas por género--|</td></th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <ReactPaginate
+                        pageCount={Math.ceil(juegosInfo.length / itemsPerPage)}
+                        pageRangeDisplayed={3}
+                        marginPagesDisplayed={1}
+                        onPageChange={handlePageChange}
+                        previousLabel="Anterior"
+                        nextLabel="Siguiente"
+                        breakLabel="..."
+                        containerClassName="pagination"
+                        activeClassName="active"
+                        pageClassName="page"
+                        pageLinkClassName="page-link"
+                        previousClassName="previous"
+                        previousLinkClassName="previous-link"
+                        nextClassName="next"
+                        nextLinkClassName="next-link"
+                    />
+                </div>
             }
             {(modal !== "") && <Modal jugador={modal} getInfo={puntosJugadorXJuego} cerrar={cerrarModal} />}
         </div>

@@ -19,52 +19,28 @@ function JuegoInfo({ info, index }) {
         }
     }
 
-    return (<table className="table mt-4">
+    return (
         <thead>
             <tr>
-                <th className="text-center" colSpan="4">Juego #{(index + 1)} - {ganador()}</th>
-            </tr>
-            <tr>
+                <th className="font-weight-bold text-center">#{(index)}</th>
                 <th className="font-weight-bold text-center">EQUIPO 1:</th>
-                <th className="text-center">{info.eq1_puntos}</th>
+                <td className="text-center">{info.eq1_puntos}</td>
                 <th className="font-weight-bold text-center">EQUIPO 2:</th>
-                <th className="text-center">{info.eq2_puntos}</th>
-            </tr>
-            <tr>
-                <th colSpan="4" className="text-center">Jugador con más Suerte:</th>
-            </tr>
-            <tr>
+                <td className="text-center">{info.eq2_puntos}</td>
                 <th>Jugador:</th>
-                <td colSpan="3">{info.max_suerte.jugador}</td>
-            </tr>
-            <tr>
+                <td>{info.max_suerte.jugador}</td>
                 <th>Suerte:</th>
-                <td colSpan="3">{info.max_suerte.suerte}</td>
-            </tr>
-            <tr>
-                <th colSpan="4" className="text-center">Jugador con más experiencia ganada:</th>
-            </tr>
-            <tr>
+                <td>{info.max_suerte.suerte}</td>
                 <th>Jugador:</th>
-                <td colSpan="3">{info.max_exp.jugador}</td>
-            </tr>
-            <tr>
-                <th>Experiencia Ganada:</th>
-                <td colSpan="3">+{info.max_exp.exp}</td>
-            </tr>
-            <tr>
-                <th colSpan="4" className="text-center">Rondas ganadas por género:</th>
-            </tr>
-            <tr>
+                <td>{info.max_exp.jugador}</td>
+                <th>Exp. Ganada:</th>
+                <td>+{info.max_exp.exp}</td>
                 <th>Hombres:</th>
-                <td colSpan="3">{puntosXgenero("H")}</td>
-            </tr>
-            <tr>
+                <td>{puntosXgenero("H")}</td>
                 <th>Mujeres:</th>
-                <td colSpan="3">{puntosXgenero("M")}</td>
+                <td>{puntosXgenero("M")}</td>
             </tr>
         </thead>
-    </table>
     );
 }
 export { JuegoInfo };
