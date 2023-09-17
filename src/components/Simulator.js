@@ -4,6 +4,8 @@ import ReactPaginate from 'react-paginate';
 import './pagination.css';
 import React from 'react';
 import { Utilities } from "./Utilities";
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -18,6 +20,7 @@ import { Line } from 'react-chartjs-2';
 import { Constants } from './Constans';
 
 function Simulator({ juegos }) {
+    const [index, setIndex] = useState(0);
     const utils = new Utilities();
     const [simulating, setSimulating] = useState(false);
     const [ending, setEnding] = useState(false);
@@ -257,19 +260,53 @@ function Simulator({ juegos }) {
                 <button className="btn btn-success btn-lg" onClick={start}>Iniciar</button>
 
             </div>}
-            {!!ending && <div className="row">
-                <div className="col card mx-1">
-                    <h5 className="text-center">Equipo 1:</h5>
-                    <div >
-                        {team1.map(j => (<p key={`E1-${j.nombre}`} className="d-flex justify-content-between"> <label> {j.nombre} | {(j.genero === "H") ? "Hombre" : "Mujer"}</label> <button className="btn btn-success btn-sm" onClick={e => setModal(j.nombre)}>Ver Grafico</button></p>))}
-                    </div>
-                </div>
-                <div className="col card mx-1">
-                    <h5 className="text-center ">Equipo 2:</h5>
-                    <div >
-                        {team2.map(j => (<p key={`E2-${j.nombre}`} className="d-flex justify-content-between"> <label> {j.nombre} | {(j.genero === "H") ? "Hombre" : "Mujer"}</label> <button className="btn btn-success btn-sm" onClick={e => setModal(j.nombre)}>Ver Grafico</button></p>))}
-                    </div>
-                </div>
+            {!!ending && <div>
+                <Tabs selectedIndex={index} onSelect={(newIndex) => setIndex(newIndex)}>
+                    <TabList>
+                        <Tab>Equipo 1</Tab>
+                        <Tab>Equipo 2</Tab>
+                    </TabList>
+                    <TabPanel>
+                        <div className="col card mx-1">
+                            <h5 className="text-center">Equipo 1:</h5>
+                            <div>
+                                {team1.map((j) => (
+                                    <p key={`E1-${j.nombre}`} className="d-flex justify-content-between">
+                                        <label>
+                                            {j.nombre} | {(j.genero === 'H') ? 'Hombre' : 'Mujer'}
+                                        </label>
+                                        <button
+                                            className="btn btn-success btn-sm"
+                                            onClick={(e) => setModal(j.nombre)}
+                                        >
+                                            Ver Gráfico
+                                        </button>
+                                    </p>
+                                ))}
+                            </div>
+                        </div>
+                    </TabPanel>
+                    <TabPanel>
+                        <div className="col card mx-1">
+                            <h5 className="text-center">Equipo 2:</h5>
+                            <div>
+                                {team2.map((j) => (
+                                    <p key={`E2-${j.nombre}`} className="d-flex justify-content-between">
+                                        <label>
+                                            {j.nombre} | {(j.genero === 'H') ? 'Hombre' : 'Mujer'}
+                                        </label>
+                                        <button
+                                            className="btn btn-success btn-sm"
+                                            onClick={(e) => setModal(j.nombre)}
+                                        >
+                                            Ver Gráfico
+                                        </button>
+                                    </p>
+                                ))}
+                            </div>
+                        </div>
+                    </TabPanel>
+                </Tabs>
             </div>}
             {
                 !!ending && <div className=" rounded" >
